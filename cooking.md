@@ -31,3 +31,6 @@
     </ul>
 </td>
 </tr></table>
+
+
+![Salmon Dinner](media/dinner.jpg "Salmon Dinner!")
