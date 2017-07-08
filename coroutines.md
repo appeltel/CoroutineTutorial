@@ -473,7 +473,7 @@ be bad to do in a coroutine, as it is a regular function, and a regular
 function cannot yield control to the scheduler to run other coroutines
 while we are waiting for this item to be fetched.
 
-The solution to this is something called an
+The solution to this problem is an
 [async for](https://docs.python.org/3/reference/compound_stmts.html#async-for)
 statement, which works much like a for statement, except that it calls slightly
 different special methods on the container which should result in a
@@ -489,4 +489,48 @@ async for item in remote_container:  # Here we might yield to the scheduler!
     do_more_stuff(item)
 ```
 
+The last new important piece of syntax involves
+[context managers](https://docs.python.org/3/reference/datamodel.html#with-statement-context-managers)
+and the `with` statement. Consider an example of a hypothetical key-value
+database that uses a context manager to handle connections. To set a
+key in the database, your statement might look like this:
 
+```python
+with database.connect('proto://db.somedomain.net') as db:
+    db.set_key('cow', 'Moo!')
+```
+
+What is going on behind the scenes is that the `database.connect` call returns
+a context manager, and the interpreter calls a special `__enter__` method
+that sets up the database connection (this involves waiting on the network)
+and returns an object that is assigned to `db` for us to use inside the with
+block to talk to the database.
+
+Then when the with block is completed, or even if it does not complete
+due to an exception, the context manager special `__exit__` method is called
+which can close the connection and perform any needed cleanup (more waiting
+on the network!).
+
+Unfortunately, if one was to use such a `with` statement in a coroutine
+that needed to make network connections on its enter and exit, the functions
+for entering and exiting would be unable to yield control back to the
+scheduler and allow other coroutines to run while waiting on the connection
+setup or teardown.
+
+To solve this, there is an `async with` statement which expects an
+asynchronous context manager that provides coroutines on enter and exit that
+are awaited on before entering or exiting the `async with` block. This allows
+a coroutine containing the `async with` statement to yeild control to the
+scheduler during this setup and allowing for other coroutines to run.
+An example might look like this:
+
+```python
+async with database.connect('proto://db.somedomain.net') as db:
+    await db.set_key('cow', 'Moo!')
+```
+
+Here the coroutine is able to yeild to the scheduler when the network
+connection is being set up, when the data for the new key is being sent to
+the database, and when it cleans up.
+
+### One Last Word on Awaiting
