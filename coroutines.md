@@ -103,3 +103,58 @@ and modify our simple module to turn the `square` function into a coroutine
 function:
 
 
+```python
+import time
+
+async def square(x):
+    print('Starting square with argument {}!'.format(x))
+    time.sleep(3)
+    print('Finishing square with argument {}!'.format(x))
+    return x * x
+
+def cube(x):
+    print('Starting cube with argument {}!'.format(x))
+    time.sleep(3)
+    y = square(x)
+    print('Finishing cube with argument {}!'.format(x))
+    return x * y
+```
+
+Now we will run this, call square, and see what happens!
+
+```
+$ python -i example.py
+>>> square(2)
+<coroutine object square at 0x10aa12410>
+```
+
+That might look odd. If you were to actually run the code in the coroutine
+function, it should return the integer 4. But instead it is returning a
+"coroutine object". What about running `cube`?
+
+```
+>>> cube(3)
+Starting cube with argument 3!
+Finishing cube with argument 3!
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "coro_by_hand.py", line 14, in cube
+    return x * y
+TypeError: unsupported operand type(s) for *: 'int' and 'coroutine'
+```
+
+This makes sense when you look at the code for cube. `y` is just the result
+of calling `square(x)`, which is again the funny "coroutine object".
+Python does not know how to multiply an integer by a coroutine object, so
+when the `cube` function tries to multiply `x * y` it raises a `TypeError`.
+
+Now I will quit and then explain what is going on:
+
+```
+>>> quit()
+sys:1: RuntimeWarning: coroutine 'square' was never awaited
+```
+
+This is also interesting. Upon exit, the system complains that this
+"coroutine object" produced by calling `square` was never "awaited".
+
