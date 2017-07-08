@@ -6,7 +6,9 @@ scheduling system to run them. A while back Brett Cannon wrote a
 on this very approach. Here I will go over coroutines using a simpler
 task of just running a few coroutines "by hand".
 
-But before getting in to how coroutines work in python and how to write them,
+### Just Functions to Start
+
+Before getting in to how coroutines work in python and how to write them,
 I want to look at some simple functions first, so here is a module that
 we can call `example.py` with a few regular python functions:
 
@@ -92,6 +94,8 @@ from sequential code (functions) to concurrent code (coroutines or threads).
 Keeping things simple is, in my mind, the key reason to consider using
 coroutines. They make it easy to reason about exactly when in your code you
 might switch between different tasks.
+
+### On To Coroutines
 
 A regular function in python is defined using the keyword `def`. When you
 call a function, you instantiate an instance of that function with the
@@ -245,7 +249,10 @@ Now `time.sleep` is a reuglar function. So clearly coroutines can call
 regular functions, but while that function is executing the coroutine is
 unable to yield control back to the caller or scheduler.
 
-In order to make this useful we will replace `time.sleep` with a special
+### Yielding to the Scheduler
+
+In order to the above example 
+useful we will replace `time.sleep` with a special
 type of coroutine that will yield control back to the scheduler which called
 `send` to run the coroutine. This is not something that you will need to
 ever write in practice unless you are writing a framework for scheduling
@@ -353,6 +360,8 @@ return value of each coroutine. It also will need a set of special
 coroutines to perform basic I/O and sleep functions and can communicate
 correctly with the scheduler.
 
+### Using a Real Scheduler
+
 Python is a "batteries included" language, and ships with the `asyncio`
 library which provides such a framework. It has a scheduler to run
 coroutines, called an "event loop", and special coroutines needed to
@@ -427,3 +436,11 @@ Notice that the order in which the coroutines are run is not deterministic. You
 can try running this example again and see that it may or may not occur in
 a different order. However, the list of results is returned in the order
 in which the coroutine objects were given to `asyncio.gather` as arguments.
+
+### Schedulers, Schedulers, Schedulers
+
+A brief mention of twisted, curio, trio, uvloop
+
+### A Bit More New Syntax
+
+Talk about `async for` and `async with`
