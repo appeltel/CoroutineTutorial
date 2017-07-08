@@ -81,7 +81,7 @@ Now reimagine this dinner as a python module:
 from time import sleep
 
 from kitchen import (
-    oven, range, microwave,
+    oven, stovetop, microwave,
     pot, baking_sheet, plate,
     salmon, orange_dressing, rice_box, water, butter, green_beans
 )
@@ -98,12 +98,12 @@ def cook_salmon():
 def cook_rice():
     pot.insert(water, amount=1.75)
     pot.inster(butter, amount=2)
-    range.add(pot)
-    range.set_burner(5)
+    stovetop.add(pot)
+    stovetop.set_burner(5)
     pot.wait_for_boil()
     pot.insert(box_rice)
     sleep(22*60)
-    range.set_burner(0)
+    stovetop.set_burner(0)
     pot.fluff_contents()
     sleep(5*60)
     return pot.extract_all()
@@ -153,3 +153,101 @@ applications are very much like cooking dinner. There is lots of waiting
 around, and structuring the work with coroutines allows one to execute
 it all concurrently while preserving the modularity that you get by splitting
 the task into functions. 
+
+## More Gratuitous Cooking Metaphors
+
+There are a number of concepts and approaches to concurrency and parallelism,
+and to some degree they can all be described through various cooking
+metaphors. While this tutorial is really just focused on coroutines, it is
+worth at least mentioning some of the major ones.
+
+### Callbacks
+
+If you have ever programmed in Javascript, you have likely encountered
+callbacks. Callbacks allow a scheduler (the cook) to execute some instructions
+after something occurs. For example, we could attach a callback function
+to the event that the oven is done preheating. Once this is done, the
+specified callback would be executed. The `cook_salmon` recipe could be
+broken up to use callbacks as follows:
+
+```python
+def cook_salmon():
+    oven.preheat(350, callback=cook_salmon_cb1)
+    return
+
+def cook_salmon_cb1():
+    baking_sheet.place(salmon)
+    for filet in salmon:
+        filet.slater(ginger_dressing, amount=2)
+    oven.insert(baking_sheet)
+    set_callback_timer(18 * 60, callback=cook_salmon_cb2)
+    return
+
+def cook_salmon_cb2():
+    return oven.extract_all()
+```
+
+Here, each function returns when there is a waiting period, and the scheduler
+will just call the next function in the chain when the callback condition
+is satisfied. In the meantime, other work can get done. We could call
+`cook_salmon()` which would get the oven going and immediately return. Then
+we can call the next function for another recipe.
+
+The annoying thing about this is that the recipe was broken into a
+bunch of small functions and so it is harder to read. In other languages
+it is a somewhat common practice to define the callback function where it
+is passed as an argument as an anonymous function (lambda). This is generally
+not possible in python as anonymous functions are restricted, but if you could
+do it, then it might look like this:
+
+
+```python
+def cook_salmon():
+    oven.preheat(350, callback=lambda : (
+        baking_sheet.place(salmon)
+        for filet in salmon:
+            filet.slater(ginger_dressing, amount=2)
+        oven.insert(baking_sheet)
+        set_callback_timer(18 * 60, callback=lambda: (
+            return oven.extract_all()
+        )
+    )
+```
+
+If there is a long chain of callbacks, then you can get a sort of cascading
+pattern of anonymous functions, sometimes referred to as "callback hell".
+This is also harder to read than a simple function.
+
+### Coroutines
+
+A coroutine executes like a function, except it has places where it will
+yield control back to a scheduler when it is waiting on something, such as
+the oven heating up. When it yields, the scheduler (cook) is free to run
+another coroutine concurrently, and when that one yields it can continue
+to the first.
+
+Here is the `cook_salmon` recipe as a python coroutine:
+
+```python
+async def cook_salmon():
+    await oven.preheat(350)
+    baking_sheet.place(salmon)
+    for filet in salmon:
+        filet.slater(ginger_dressing, amount=2)
+    oven.insert(baking_sheet)
+    await asyncio.sleep(18 * 60)
+    return oven.extract_all()
+```
+
+This is very nice as it looks much like a normal function, you can easily
+see how the recipe progresses. When it gets to a special `await` expression,
+it will yield control back to the scheduler to allow other recipes to run
+while the oven heats or the salmon bakes. How exactly this works will be
+described in detail in the next section.
+
+### Threads
+
+Threads offer a way to run multiple functions concurrently without even
+changing the functions. A thread a separate unit of execution known to the
+operating system kernel, which will schedule each thread to run without
+you having to do anything.
