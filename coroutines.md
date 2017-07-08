@@ -305,3 +305,125 @@ Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 StopIteration: 27
 ```
+
+To see how this really helps, consider two coroutine objects, `cube(5)` and
+`cube(10)`. We (the human scheduler) are capable of getting one of the
+objects running, and then while one is waiting three seconds, starting the
+other one and running it concurrently. As the two coroutines yield back to
+the scheduler, we can continue their execution by calling `send`:
+
+```
+>>> coro1 = cube(5)
+>>> coro2 = cube(10)
+>>> coro1.send(None)
+Starting cube with argument 5!
+'Please do not continue until 3 seconds have elapsed.'
+>>> coro2.send(None)
+Starting cube with argument 10!
+'Please do not continue until 3 seconds have elapsed.'
+>>> coro1.send(None)
+Starting square with argument 5!
+'Please do not continue until 3 seconds have elapsed.'
+>>> coro2.send(None)
+Starting square with argument 10!
+'Please do not continue until 3 seconds have elapsed.'
+>>> coro1.send(None)
+Finishing square with argument 5!
+Finishing cube with argument 5!
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration: 125
+>>> coro2.send(None)
+Finishing square with argument 10!
+Finishing cube with argument 10!
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration: 1000
+```
+
+From this it should be clear how using coroutines is an example of
+cooperative rather than pre-emptive multitasking. The scheduler cannot
+tell a coroutine that it is time to stop and allow another to run, it
+has to wait until the coroutine willingly yields control back to the
+scheduler.
+
+To make this useful we need a framework to provide a scheduler that can
+run coroutines without human intervention and return to us the
+return value of each coroutine. It also will need a set of special
+coroutines to perform basic I/O and sleep functions and can communicate
+correctly with the scheduler.
+
+Python is a "batteries included" language, and ships with the `asyncio`
+library which provides such a framework. It has a scheduler to run
+coroutines, called an "event loop", and special coroutines needed to
+yield back to the event loop. For this example, we only need to use
+`asyncio.sleep`. Awaiting `asyncio.sleep(n)` with a number `n` will yield
+control to the asyncio event loop, and instruct it to wait at least `n`
+seconds before resuming the coroutine. In order to use this, we need to
+first slightly rewrite the example module to use `asyncio.sleep` rather than
+our `manual_sleep` coroutine function:
+
+```python
+import asyncio
+
+async def square(x):
+    print('Starting square with argument {}!'.format(x))
+    await asyncio.sleep(3)
+    print('Finishing square with argument {}!'.format(x))
+    return x * x
+
+async def cube(x):
+    print('Starting cube with argument {}!'.format(x))
+    await asyncio.sleep(3)
+    y = await square(x)
+    print('Finishing cube with argument {}!'.format(x))
+    return x * y
+```
+
+Now run this module interactively and schedule a `cube(5)` coroutine
+to be executed:
+
+```
+$ python -i example.py
+>>> loop = asyncio.get_event_loop()
+>>> result = loop.run_until_complete(cube(5))
+Starting cube with argument 5!
+Starting square with argument 5!
+Finishing square with argument 5!
+Finishing cube with argument 5!
+>>> result
+125
+```
+
+Great! But how does one use this to execute coroutines concurrently? For this
+asyncio provides an `asyncio.gather` coroutine function. This special
+coroutine function takes any number of coroutine objects as arugments, and
+tells the event loop to execute them all concurrently. When all of the
+coroutines have finished running, it returns all their results in a list.
+Here goes:
+
+```
+$ python -i example.py
+>>> loop = asyncio.get_event_loop()
+>>> coro = asyncio.gather(cube(3), cube(4), cube(5))
+>>> results = loop.run_until_complete(coro)
+Starting cube with argument 4!
+Starting cube with argument 3!
+Starting cube with argument 5!
+Starting square with argument 4!
+Starting square with argument 3!
+Starting square with argument 5!
+Finishing square with argument 4!
+Finishing cube with argument 4!
+Finishing square with argument 3!
+Finishing cube with argument 3!
+Finishing square with argument 5!
+Finishing cube with argument 5!
+>>> results
+[27, 64, 125]
+```
+
+Notice that the order in which the coroutines are run is not deterministic. You
+can try running this example again and see that it may or may not occur in
+a different order. However, the list of results is returned in the order
+in which the coroutine objects were given to `asyncio.gather` as arguments.
