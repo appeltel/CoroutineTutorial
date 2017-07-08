@@ -250,4 +250,78 @@ described in detail in the next section.
 Threads offer a way to run multiple functions concurrently without even
 changing the functions. A thread a separate unit of execution known to the
 operating system kernel, which will schedule each thread to run without
-you having to do anything.
+you having to do anything. Python has a nice `threading` module in the
+standard library that makes this easy:
+
+```python
+import threading
+
+salmon_thread = threading.Thread(target=cook_salmon)
+rice_thread = threading.Thread(target=cook_rice)
+beans_thread = threading.Thread(target=cook_beans)
+
+salmon_thread.start()
+rice_thread.start()
+beans_thread.start()
+
+salmon_thread.join()
+rice_thread.join()
+beans_thread.join()
+```
+
+The call to `start()` will make each thread get scheduled for execution,
+and the `join()` will wait until the thread is done. So in this case all three
+recipes will run concurrently, and the code block will end once they are all
+finished. Unfortunately this will not return your dinner to you, the return
+value of the function called in the thread is lost, so the garbage collector
+will eat your dinner. To keep your dinner, you would need to rewrite the
+functions to put the dinner somewhere safe and shared, like a
+[Queue](https://docs.python.org/3.6/library/queue.html) object.
+
+The key thing that must be mentioned here is that threads are a form of
+preemptive multitasking. This means that the operating system kernel
+does not care exactly what you are doing in one thread, when it decides
+to switch to a different thread. You might be right in the middle of
+putting dressing on the salmon when the OS yells at you to get back to
+work on the beans. When writing functions to be executed as threads, you
+have no control over when the system switches between threads.
+
+Additionally, threads generally share resources. This means that if one
+thread is preheating the oven to 350, the OS could switch you to another
+that wants to preheat the oven to 425. The only way to avoid anarchy in the
+kitchen is to construct objects like
+[Semaphores](https://docs.python.org/2/library/threading.html#semaphore-objects)
+to control which thread is allowed to use the oven at any given time, forcing
+threads to wait until others are done using the oven.
+
+Finally, threads can in principle result in true parallelism. This means that
+if your system has multiple CPU cores, the OS kernel can schedule multiple
+threads to literally run at the same time. This is useful not just to avoid
+IO waits, but to get additional computational work done. In python, however,
+there is a Global Interpreter Lock (GIL) that prevents more than one thread
+from executing python instructions at the same time. There are ways that
+computational libraries like `numpy` avoid this restriction by releasing
+the GIL and performing computation with C-extensions, but that is the
+subject of a different tutorial.
+
+### Multiprocessing
+
+Python also has a nice
+[multiprocessing](https://docs.python.org/3.6/library/multiprocessing.html)
+module to allow running functions in entirely separate processes, each
+with their own interpreter. This means that there is no GIL restriction,
+and multiple functions may be executed in parallel if there are multiple
+CPU cores available. It also means that no resources or memory are shared
+unless explicit constructs are used to communicate between processes.
+
+Think of this as running each recipe in its own kitchen. You have one
+kitchen for the salmon, one for the rice, and one for the beans. If one
+recipe was to call for the oven to be set to 350, and another to 425, then
+it does not matter. Unless an oven was deliberately set as a shared
+resource between the processes, then each kitchen has its own completely
+separate oven.
+
+Much like in the kitchen metaphor, in reality multiprocessing is more
+expensive in terms of memory usage, as each process gets a complete
+python interpreter and a copy of the full program in its own private
+memory allocation.
