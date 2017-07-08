@@ -443,4 +443,50 @@ A brief mention of twisted, curio, trio, uvloop
 
 ### A Bit More New Syntax
 
-Talk about `async for` and `async with`
+Before progressing to the next section, where the real fun will begin with
+actual concurrent IO over an actual network, there is a bit more coroutine
+syntax to understand.
+
+First, consider a basic python for loop:
+
+```python
+for item in container:
+    do_stuff(item)
+    do_more_stuff(item)
+```
+
+In this example, the object `container` could be a lot of things. It could
+be a list, a dict, a generator, or even a string. You can define your own
+classes to adhere to the simple python
+[iterator protocol](https://docs.python.org/3/library/stdtypes.html#iterator-types)
+which can then be iterated over in for loops. The way this works is that a
+special `__iter__` method is called on the container to provide an iterator
+object, and then at the top of each pass through the loop, a special
+`__next__` method is called on the iterator which returns a value to be
+assigned to `item`. The point here is that this `__next__` method is a
+regular function - not a coroutine function.
+
+So imagine that we had a special `container` class that did not store its
+data locally. Instead, in order to fetch each item with `__next__` it had to
+make a network connection and get it from a remote database. This would
+be bad to do in a coroutine, as it is a regular function, and a regular
+function cannot yield control to the scheduler to run other coroutines
+while we are waiting for this item to be fetched.
+
+The solution to this is something called an
+[async for](https://docs.python.org/3/reference/compound_stmts.html#async-for)
+statement, which works much like a for statement, except that it calls slightly
+different special methods on the container which should result in a
+coroutine object that is awaited on to return the item used for each pass of
+the loop. Basically, this means that while the async for loop is doing
+its business to fetch the item from some remote database, it can yield
+back to the scheduler in order to allow other coroutines to run.
+
+
+```python
+async for item in remote_container:  # Here we might yield to the scheduler!
+    do_stuff(item)
+    do_more_stuff(item)
+```
+
+
