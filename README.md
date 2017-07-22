@@ -27,6 +27,24 @@ It will be assumed that the listener has a basic understanding of
 functions, classes, and exceptions in Python, but no prior knowledge
 of concurrent programming is required.
 
+## Setup Instructions
+
+This tutorial requires Python 3.5 or later. You can download the latest
+version of Python [here](https://www.python.org/downloads/).
+I personally use [pyenv](https://github.com/pyenv/pyenv) to manage multiple
+python versions on my OSX development machine.
+
+In addition to python 3.5 or later, some parts of the tutorial will require
+the third party packages [requests](http://docs.python-requests.org/en/master/)
+and [aiohttp](http://aiohttp.readthedocs.io/en/stable/). These can be installed
+by the commands `pip install requests` and `pip install aiohttp`.
+
+I will generally write example code in short modules and then explore using
+them with `python -i module.py`. This will run the module and then continue
+in interactive mode where any functions or classes defined in the module
+are accessible. These short modules can be found in the [examples](examples)
+area of this repository.
+
 ## Outline
 
 1. [Cooking with Concurrency](cooking.md)
