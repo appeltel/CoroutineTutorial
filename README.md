@@ -1,3 +1,10 @@
+<div style="background-color:rgba(255, 121, 0, 0.7); text-align:center; vertical-align: middle; padding:40px 0;">
+<b>
+WARNING: THIS CONTENT IS UNDER CONSTRUCTION, EXCEPT FOR THE SETUP
+INSTRUCTIONS.
+</b>
+</div>
+
 # A Brief Introduction to Concurrency and Coroutines
 
 This is the content of my
