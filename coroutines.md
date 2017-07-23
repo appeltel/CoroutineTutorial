@@ -10,7 +10,7 @@ task of just running a few coroutines "by hand".
 
 Before getting in to how coroutines work in python and how to write them,
 I want to look at some simple functions first, so here is a module that
-we can call `example.py` with a few regular python functions:
+we can call `byhand.py` with a few regular python functions:
 
 ```python
 import time
@@ -35,7 +35,7 @@ to fetch some information from a database somewhere in order to multiply
 numbers. We will start by just running them:
 
 ```
-$ python -i example.py
+$ python -i byhand.py
 >>> square(4)
 Starting square with argument 4!
 Finishing square with argument 4!
@@ -52,7 +52,7 @@ Then to create a goal for this section, consider running through a loop of
 numbers and calculating the cube of each one:
 
 ```
-$ python -i example.py
+$ python -i byhand.py
 >>> for x in range(1, 4):
 ...     cube(x)
 ... 
@@ -127,7 +127,7 @@ def cube(x):
 Now we will run this, call square, and see what happens!
 
 ```
-$ python -i example.py
+$ python -i byhand.py
 >>> square(2)
 <coroutine object square at 0x10aa12410>
 ```
@@ -177,7 +177,7 @@ can in principle be used for a scheduler to send information to a running
 coroutine. So here goes:
 
 ```
-$ python -i example.py 
+$ python -i byhand.py 
 >>> coro = square(4)
 >>> coro.send(None)
 Starting square with argument 4!
@@ -287,7 +287,7 @@ to whatever is running the coroutine by calling `send` - which is a human in
 this case! So try running this version:
 
 ```
-$ python -i example.py 
+$ python -i byhand.py 
 >>> coro = cube(3)
 >>> coro.send(None)
 Starting cube with argument 3!
@@ -393,7 +393,7 @@ Now run this module interactively and schedule a `cube(5)` coroutine
 to be executed:
 
 ```
-$ python -i example.py
+$ python -i byhand.py
 >>> loop = asyncio.get_event_loop()
 >>> result = loop.run_until_complete(cube(5))
 Starting cube with argument 5!
@@ -412,7 +412,7 @@ coroutines have finished running, it returns all their results in a list.
 Here goes:
 
 ```
-$ python -i example.py
+$ python -i byhand.py
 >>> loop = asyncio.get_event_loop()
 >>> coro = asyncio.gather(cube(3), cube(4), cube(5))
 >>> results = loop.run_until_complete(coro)
