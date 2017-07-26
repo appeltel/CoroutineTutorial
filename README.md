@@ -3,9 +3,13 @@ INSTRUCTIONS.* &#x1f6a7;
 
 # A Brief Introduction to Concurrency and Coroutines
 
-This is the content of my
-[PyOhio 2017 tutorial](https://pyohio.org/schedule/presentation/289/)
-in written form, suitable for studying offline.
+This is the repository of links and supporting materials for my
+[PyOhio 2017 tutorial](https://pyohio.org/schedule/presentation/289/).
+
+Initially I had hoped to provide a full tutorial in written form suitable
+for studying offline, but
+that has proven to be too ambitious given the time I have available, so
+I will be focusing on preparing the live presentation.
 
 ## Abstract
 
@@ -49,6 +53,9 @@ are accessible. These short modules can be found in the [examples](examples)
 area of this repository.
 
 ## Outline
+
+*Note*: The links in this outline lead to either my own notes for each
+section or an unfinished draft of the tutorial in written and expanded form.
 
 1. [Cooking with Concurrency](cooking.md)
 1. [Understanding python Coroutines](coroutines.md)
