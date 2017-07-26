@@ -57,6 +57,7 @@ area of this repository.
 *Note*: The links in this outline lead to either my own notes for each
 section or an unfinished draft of the tutorial in written and expanded form.
 
+1. [Warmup: Animals in the Cloud](warmup.md)
 1. [Cooking with Concurrency](cooking.md)
 1. [Understanding python Coroutines](coroutines.md)
 1. [Getting to Know asyncio](asyncio.md)
