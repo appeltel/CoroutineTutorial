@@ -2,6 +2,16 @@ import asyncio
 from aiohttp import web
 
 
+class Hub():
+
+    def __init__(self):
+        self.subscriptions = set()
+
+    def publish(self, message):
+        for queue in self.subscriptions:
+            queue.put_nowait(message)
+
+
 class Subscription():
 
     def __init__(self, hub):
@@ -14,16 +24,6 @@ class Subscription():
 
     def __exit__(self, type, value, traceback):
         hub.subscriptions.remove(self.queue)
-
-
-class Hub():
-
-    def __init__(self):
-        self.subscriptions = set()
-
-    def publish(self, message):
-        for queue in self.subscriptions:
-            queue.put_nowait(message)
 
 
 hub = Hub()
