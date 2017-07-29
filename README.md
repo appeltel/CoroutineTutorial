@@ -1,5 +1,5 @@
-&#x1f6a7; *WARNING: THIS CONTENT IS UNDER CONSTRUCTION, EXCEPT FOR THE SETUP
-INSTRUCTIONS.* &#x1f6a7;
+&#x1f6a7; *WARNING: THIS REPO IS A HOT MESS - WILL FIX IT UP
+AFTER I GET HOME!* &#x1f6a7;
 
 # A Brief Introduction to Concurrency and Coroutines
 
@@ -51,6 +51,10 @@ them with `python -i module.py`. This will run the module and then continue
 in interactive mode where any functions or classes defined in the module
 are accessible. These short modules can be found in the [examples](examples)
 area of this repository.
+
+## Slides as Presented
+
+[PDF format slides](conference_slides.pdf)
 
 ## Outline
 
